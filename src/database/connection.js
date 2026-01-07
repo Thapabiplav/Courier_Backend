@@ -2,42 +2,39 @@ const { Sequelize, DataTypes } = require("sequelize");
 const { dbConfig } = require("../config/config");
 
 const sequelize = new Sequelize(
-  dbConfig.username,
   dbConfig.database,
+  dbConfig.username,
   dbConfig.password,
   {
     host: dbConfig.host,
     port: dbConfig.port,
     dialect: "mysql",
-    pool: {
-      max: dbConfig.max,
-      min: dbConfig.min,
-      acquire: dbConfig.acquire,
-      idle: dbConfig.idle,
-    },
+    pool: dbConfig.pool,
   }
 );
 
 sequelize
   .authenticate()
-  .then(() => {
-    console.log("database connected successfully");
-  })
-  .catch((err) => {
-    console.error("database connection unsuccess", err);
-  });
+  .then(() => console.log("Database connected successfully"))
+  .catch((err) => console.error("Database connection failed", err));
 
 const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
+// Models
+db.users = require("./model/authModel")(sequelize, DataTypes);
+db.inquiries = require("./model/inquiryModel")(sequelize, DataTypes);
+db.bills = require("./model/billModel")(sequelize, DataTypes);
+
+// Define relationships
+db.bills.belongsTo(db.inquiries, { foreignKey: "inquiryId", as: "inquiry" });
+db.inquiries.hasOne(db.bills, { foreignKey: "inquiryId", as: "bill" });
+
+// Sync database
 db.sequelize
-  .sync({
-    alter: false,
-  })
-  .then(() => {
-    console.log("database sync successfully");
-  })
-  .catch((err) => {
-    console.log("database sync failed", err);
-  });
+  .sync({ force: false })
+  .then(() => console.log("Database synced successfully"))
+  .catch((err) => console.error("Database sync failed", err));
+
+module.exports = db;
