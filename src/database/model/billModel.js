@@ -37,6 +37,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.FLOAT,
       allowNull: false,
     },
+    items: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: [],
+    },
   });
 
   return Bill;
